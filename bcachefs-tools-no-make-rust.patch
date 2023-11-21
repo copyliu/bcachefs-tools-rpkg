@@ -1,0 +1,45 @@
+From 9a8f5229d833de5fe257bbdd2239038916c90482 Mon Sep 17 00:00:00 2001
+From: Neal Gompa <ngompa@fedoraproject.org>
+Date: Fri, 17 Nov 2023 15:32:10 -0500
+Subject: [PATCH] Makefile: Do not run Rust builds
+
+We are going to run it separately.
+---
+ Makefile | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 61a6245..29293f8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -37,18 +37,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC 			\
+ 	$(EXTRA_CFLAGS)
+ LDFLAGS+=$(CFLAGS) $(EXTRA_LDFLAGS)
+ 
+-ifdef CARGO_TOOLCHAIN_VERSION
+-  CARGO_TOOLCHAIN = +$(CARGO_TOOLCHAIN_VERSION)
+-endif
+-
+-CARGO_ARGS=${CARGO_TOOLCHAIN}
+-CARGO=cargo $(CARGO_ARGS)
+-CARGO_PROFILE=release
+-# CARGO_PROFILE=debug
+-
+-CARGO_BUILD_ARGS=--$(CARGO_PROFILE)
+-CARGO_BUILD=$(CARGO) build $(CARGO_BUILD_ARGS)
+-
+ include Makefile.compiler
+ 
+ CFLAGS+=$(call cc-disable-warning, unused-but-set-variable)
+@@ -132,7 +120,7 @@ libbcachefs.a: $(filter-out ./tests/%.o, $(OBJS))
+ 
+ RUST_SRCS=$(shell find rust-src/src rust-src/bch_bindgen/src -type f -iname '*.rs')
+ rust-src/target/release/libbcachefs_rust.a: $(RUST_SRCS)
+-	$(CARGO_BUILD) --manifest-path rust-src/Cargo.toml
++	@echo "    [RUST] Skipped"
+ 
+ tests/test_helper: $(filter ./tests/%.o, $(OBJS))
+ 	@echo "    [LD]     $@"
+-- 
+2.41.0
+
