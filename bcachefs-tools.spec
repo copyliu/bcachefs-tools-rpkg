@@ -39,10 +39,10 @@ Source1:        https://evilpiepirate.org/%{name}/%{name}-vendored-%{version}.ta
 Source2:        https://git.kernel.org/pub/scm/docs/kernel/pgpkeys.git/plain/keys/13AB336D8DCA6E76.asc
 
 # Upstream patches
+## From: https://evilpiepirate.org/git/bcachefs-tools.git/commit/?id=89abdd87271e237141a9d4f44d531f7c53353b83
+Patch0001:      0001-Makefile-fsck-Use-libexec-instead-of-lib.patch
 
 # Upstreamable patches
-## From: https://github.com/koverstreet/bcachefs-tools/pull/195
-Patch0101:      0001-Makefile-fsck-Use-libexec-instead-of-lib.patch
 
 # Fedora-specific patches
 ## Ensure that the makefile doesn't run rust itself, so we can build with our flags properly
