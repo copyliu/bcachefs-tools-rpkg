@@ -1,19 +1,30 @@
-From 9a8f5229d833de5fe257bbdd2239038916c90482 Mon Sep 17 00:00:00 2001
+From e8b69009e0f0ad1eb7079d70e5e6f6faecf7de4e Mon Sep 17 00:00:00 2001
 From: Neal Gompa <ngompa@fedoraproject.org>
-Date: Fri, 17 Nov 2023 15:32:10 -0500
+Date: Sun, 24 Dec 2023 08:46:37 -0500
 Subject: [PATCH] Makefile: Do not run Rust builds
 
 We are going to run it separately.
 ---
- Makefile | 14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+ Makefile | 20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 61a6245..29293f8 100644
+index 0e5cf6e..7f04f0f 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -37,18 +37,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC 			\
- 	$(EXTRA_CFLAGS)
+@@ -15,10 +15,8 @@ endif
+ 
+ ifeq ($(BUILD_VERBOSE),1)
+   Q =
+-  CARGO_CLEAN_ARGS = --verbose
+ else
+   Q = @
+-  CARGO_CLEAN_ARGS = --quiet
+ endif
+ 
+ # Prevent recursive expansions of $(CFLAGS) to avoid repeatedly performing
+@@ -47,21 +45,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC			\
+ # recursive expansion here (CFLAGS is not yet completely built by this line)
  LDFLAGS+=$(CFLAGS) $(EXTRA_LDFLAGS)
  
 -ifdef CARGO_TOOLCHAIN_VERSION
@@ -24,22 +35,33 @@ index 61a6245..29293f8 100644
 -CARGO=cargo $(CARGO_ARGS)
 -CARGO_PROFILE=release
 -# CARGO_PROFILE=debug
+-CARGO_MANIFEST=--manifest-path rust-src/Cargo.toml
 -
 -CARGO_BUILD_ARGS=--$(CARGO_PROFILE)
--CARGO_BUILD=$(CARGO) build $(CARGO_BUILD_ARGS)
+-CARGO_BUILD=$(CARGO) build $(CARGO_BUILD_ARGS) $(CARGO_MANIFEST)
+-
+-CARGO_CLEAN=$(CARGO) clean $(CARGO_CLEAN_ARGS) $(CARGO_MANIFEST)
 -
  include Makefile.compiler
  
  CFLAGS+=$(call cc-disable-warning, unused-but-set-variable)
-@@ -132,7 +120,7 @@ libbcachefs.a: $(filter-out ./tests/%.o, $(OBJS))
+@@ -189,7 +172,7 @@ libbcachefs.a: $(filter-out ./tests/%.o, $(OBJS))
  
- RUST_SRCS=$(shell find rust-src/src rust-src/bch_bindgen/src -type f -iname '*.rs')
+ RUST_SRCS:=$(shell find rust-src/src rust-src/bch_bindgen/src -type f -iname '*.rs')
  rust-src/target/release/libbcachefs_rust.a: $(RUST_SRCS)
--	$(CARGO_BUILD) --manifest-path rust-src/Cargo.toml
+-	$(CARGO_BUILD)
 +	@echo "    [RUST] Skipped"
  
  tests/test_helper: $(filter ./tests/%.o, $(OBJS))
  	@echo "    [LD]     $@"
+@@ -234,7 +217,6 @@ install_systemd: $(systemd_services) $(systemd_libfiles)
+ clean:
+ 	@echo "Cleaning all"
+ 	$(Q)$(RM) bcachefs libbcachefs.a tests/test_helper .version *.tar.xz $(OBJS) $(DEPS) $(DOCGENERATED)
+-	$(Q)$(CARGO_CLEAN)
+ 	$(Q)$(RM) -f $(built_scripts)
+ 
+ .PHONY: deb
 -- 
-2.41.0
+2.43.0
 

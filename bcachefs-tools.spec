@@ -15,7 +15,7 @@
 %global make_opts VERSION="%{version}" %{?with_fuse:BCACHEFS_FUSE=1} %{!?with_rust:NO_RUST=1} BUILD_VERBOSE=1 PREFIX=%{_prefix} ROOT_SBINDIR=%{_sbindir}
 
 Name:           bcachefs-tools
-Version:        1.3.5
+Version:        1.4.0
 Release:        1%{?dist}
 Summary:        Userspace tools for bcachefs
 
@@ -41,6 +41,8 @@ Source2:        https://git.kernel.org/pub/scm/docs/kernel/pgpkeys.git/plain/key
 # Upstream patches
 
 # Upstreamable patches
+## From: https://github.com/koverstreet/bcachefs-tools/pull/195
+Patch0101:      0001-Makefile-fsck-Use-libexec-instead-of-lib.patch
 
 # Fedora-specific patches
 ## Ensure that the makefile doesn't run rust itself, so we can build with our flags properly
@@ -60,8 +62,11 @@ BuildRequires:  pkgconfig(libsodium)
 BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(liburcu)
 BuildRequires:  pkgconfig(libzstd)
+BuildRequires:  pkgconfig(systemd)
+BuildRequires:  pkgconfig(udev)
 BuildRequires:  pkgconfig(uuid)
 BuildRequires:  pkgconfig(zlib)
+BuildRequires:  systemd-rpm-macros
 
 %if %{with rust}
 BuildRequires:  cargo-rpm-macros >= 25
@@ -93,6 +98,9 @@ check, modify and correct any inconsistencies in the bcachefs filesystem.
 %{_sbindir}/fsck.bcachefs
 %{_sbindir}/mkfs.bcachefs
 %{_mandir}/man8/bcachefs.8*
+%{_libexecdir}/bcachefs*
+%{_unitdir}/bcachefs*
+%{_udevrulesdir}/64-bcachefs.rules
 
 %if %{with fuse}
 %dnl ----------------------------------------------------------------------------
@@ -170,6 +178,10 @@ rm -rf %{buildroot}%{_sbindir}/*.fuse.bcachefs
 
 
 %changelog
+* Sun Dec 24 2023 Neal Gompa <ngompa@fedoraproject.org> - 1.4.0-1
+- Update to 1.4.0
+- Add patch to move systemd unit helpers to libexecdir
+
 * Tue Dec 05 2023 Neal Gompa <ngompa@fedoraproject.org> - 1.3.5-1
 - Update to 1.3.5
 
