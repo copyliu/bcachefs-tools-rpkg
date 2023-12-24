@@ -98,8 +98,9 @@ check, modify and correct any inconsistencies in the bcachefs filesystem.
 %{_sbindir}/fsck.bcachefs
 %{_sbindir}/mkfs.bcachefs
 %{_mandir}/man8/bcachefs.8*
-%{_libexecdir}/bcachefs*
-%{_unitdir}/bcachefs*
+%{_libexecdir}/bcachefsck*
+%{_unitdir}/bcachefsck*
+%{_unitdir}/system-bcachefsck.slice
 %{_udevrulesdir}/64-bcachefs.rules
 
 %if %{with fuse}
