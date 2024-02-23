@@ -1,0 +1,48 @@
+From 3388cf009a0e90905ee675baf28c8a510b7459c7 Mon Sep 17 00:00:00 2001
+From: Thomas Bertschinger <tahbertschinger@gmail.com>
+Date: Fri, 23 Feb 2024 15:20:42 -0700
+Subject: [PATCH] powerpc: use "long long" for 64-bit types in userspace
+
+This resolves build warnings and failures for architectures where the
+Linux userspace `asm/types.h` header defines 64-bit types (u64, s64) as
+`long` instead of `long long`.
+
+By defining `__SANE_USERSPACE_TYPES__`, these types are defined as
+`long long` instead.
+
+Signed-off-by: Thomas Bertschinger <tahbertschinger@gmail.com>
+Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+---
+ Makefile              | 1 +
+ include/linux/types.h | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 6e5d0e5..7363d5d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -42,6 +42,7 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC			\
+ 	-DNO_BCACHEFS_FS					\
+ 	-DNO_BCACHEFS_SYSFS					\
+ 	-DVERSION_STRING='"$(VERSION)"'				\
++	-D__SANE_USERSPACE_TYPES__				\
+ 	$(EXTRA_CFLAGS)
+ 
+ # Intenionally not doing the above to $(LDFLAGS) because we rely on
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 6ae97c4..004d5eb 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -10,7 +10,9 @@
+ #include <sys/types.h>
+ #include <linux/posix_types.h>
+ 
++#ifndef __SANE_USERSPACE_TYPES__
+ #define __SANE_USERSPACE_TYPES__	/* For PPC64, to get LL64 types */
++#endif
+ #include <asm/types.h>
+ 
+ #include <linux/cache.h>
+-- 
+2.43.0
+
