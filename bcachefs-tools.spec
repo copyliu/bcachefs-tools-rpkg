@@ -15,8 +15,8 @@
 %global make_opts VERSION="%{version}" %{?with_fuse:BCACHEFS_FUSE=1} %{!?with_rust:NO_RUST=1} BUILD_VERBOSE=1 PREFIX=%{_prefix} ROOT_SBINDIR=%{_sbindir}
 
 Name:           bcachefs-tools
-Version:        1.6.3
-Release:        2%{?dist}
+Version:        1.6.4
+Release:        1%{?dist}
 Summary:        Userspace tools for bcachefs
 
 # --- rust ---
@@ -39,8 +39,6 @@ Source1:        https://evilpiepirate.org/%{name}/%{name}-vendored-%{version}.ta
 Source2:        https://git.kernel.org/pub/scm/docs/kernel/pgpkeys.git/plain/keys/13AB336D8DCA6E76.asc
 
 # Upstream patches
-Patch0001:      0001-rust-use-libc-Ioctl-type-for-ioctl-request-argument.patch
-Patch0002:      0001-powerpc-use-long-long-for-64-bit-types-in-userspace.patch
 
 # Upstreamable patches
 
@@ -171,6 +169,10 @@ rm -rf %{buildroot}%{_sbindir}/*.fuse.bcachefs
 
 
 %changelog
+* Fri Feb 23 2024 Neal Gompa <ngompa@fedoraproject.org> - 1.6.4-1
+- Update to 1.6.4
+- Drop backported patches
+
 * Fri Feb 23 2024 Neal Gompa <ngompa@fedoraproject.org> - 1.6.3-2
 - Backport patches to fix the build
 
