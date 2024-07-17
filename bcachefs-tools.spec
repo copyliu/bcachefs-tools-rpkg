@@ -16,7 +16,7 @@
 
 Name:           bcachefs-tools
 Version:        1.7.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Userspace tools for bcachefs
 
 # --- rust ---
@@ -169,6 +169,9 @@ rm -rf %{buildroot}%{_sbindir}/*.fuse.bcachefs
 
 
 %changelog
+* Wed Jul 17 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.7.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
 * Sun May 12 2024 Neal Gompa <ngompa@fedoraproject.org> - 1.7.0-1
 - Update to 1.7.0
 
