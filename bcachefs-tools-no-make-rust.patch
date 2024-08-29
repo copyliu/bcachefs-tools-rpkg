@@ -1,6 +1,6 @@
-From b45543b26c875bb6cf24197d146f6d4faebb4c81 Mon Sep 17 00:00:00 2001
+From 6c0dafbdc5d87092e282a9d3275b99ddd18c28c0 Mon Sep 17 00:00:00 2001
 From: Neal Gompa <ngompa@fedoraproject.org>
-Date: Wed, 14 Feb 2024 08:15:05 -0500
+Date: Thu, 29 Aug 2024 09:39:18 -0400
 Subject: [PATCH] Makefile: Do not run Rust builds
 
 We are going to run it separately.
@@ -9,7 +9,7 @@ We are going to run it separately.
  1 file changed, 1 insertion(+), 18 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 876efbb..16c34bb 100644
+index 23122fd6..24d18f61 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -16,10 +16,8 @@ endif
@@ -23,7 +23,7 @@ index 876efbb..16c34bb 100644
  endif
  
  # Prevent recursive expansions of $(CFLAGS) to avoid repeatedly performing
-@@ -48,20 +46,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC			\
+@@ -49,20 +47,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC			\
  # recursive expansion here (CFLAGS is not yet completely built by this line)
  LDFLAGS+=$(CFLAGS) $(EXTRA_LDFLAGS)
  
@@ -44,23 +44,23 @@ index 876efbb..16c34bb 100644
  include Makefile.compiler
  
  CFLAGS+=$(call cc-disable-warning, unused-but-set-variable)
-@@ -175,7 +159,7 @@ BCACHEFS_DEPS=libbcachefs.a
+@@ -173,7 +157,7 @@ BCACHEFS_DEPS=libbcachefs.a
  RUST_SRCS:=$(shell find src bch_bindgen/src -type f -iname '*.rs')
  
  bcachefs: $(BCACHEFS_DEPS) $(RUST_SRCS)
 -	$(Q)$(CARGO_BUILD)
 +	@echo "    [RUST]   Skipped."
  
- libbcachefs.a: $(filter-out ./tests/%.o, $(OBJS))
+ libbcachefs.a: $(OBJS)
  	@echo "    [AR]     $@"
-@@ -225,7 +209,6 @@ install_systemd: $(systemd_services) $(systemd_libexecfiles)
+@@ -219,7 +203,6 @@ install_systemd: $(systemd_services) $(systemd_libexecfiles)
  clean:
  	@echo "Cleaning all"
- 	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a tests/test_helper .version *.tar.xz $(OBJS) $(DEPS) $(DOCGENERATED)
+ 	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version *.tar.xz $(OBJS) $(DEPS) $(DOCGENERATED)
 -	$(Q)$(CARGO_CLEAN)
  	$(Q)$(RM) -f $(built_scripts)
  
  .PHONY: deb
 -- 
-2.43.0
+2.45.2
 

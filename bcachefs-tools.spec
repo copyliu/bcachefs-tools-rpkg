@@ -15,8 +15,8 @@
 %global make_opts VERSION="%{version}" %{?with_fuse:BCACHEFS_FUSE=1} %{!?with_rust:NO_RUST=1} BUILD_VERBOSE=1 PREFIX=%{_prefix} ROOT_SBINDIR=%{_sbindir}
 
 Name:           bcachefs-tools
-Version:        1.7.0
-Release:        2%{?dist}
+Version:        1.11.0
+Release:        1%{?dist}
 Summary:        Userspace tools for bcachefs
 
 # --- rust ---
@@ -169,6 +169,9 @@ rm -rf %{buildroot}%{_sbindir}/*.fuse.bcachefs
 
 
 %changelog
+* Thu Aug 29 2024 Neal Gompa <ngompa@fedoraproject.org> - 1.11.0-1
+- Update to 1.11.0
+
 * Wed Jul 17 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.7.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
 
