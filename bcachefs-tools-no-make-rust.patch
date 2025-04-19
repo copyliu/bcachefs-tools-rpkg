@@ -1,4 +1,4 @@
-From 6c0dafbdc5d87092e282a9d3275b99ddd18c28c0 Mon Sep 17 00:00:00 2001
+From 9ccc32db6cbac9d0f24bdf88316aefd82a837b67 Mon Sep 17 00:00:00 2001
 From: Neal Gompa <ngompa@fedoraproject.org>
 Date: Thu, 29 Aug 2024 09:39:18 -0400
 Subject: [PATCH] Makefile: Do not run Rust builds
@@ -9,7 +9,7 @@ We are going to run it separately.
  1 file changed, 1 insertion(+), 18 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 23122fd6..24d18f61 100644
+index 7d1812ce..359086e1 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -16,10 +16,8 @@ endif
@@ -22,8 +22,8 @@ index 23122fd6..24d18f61 100644
 -  CARGO_CLEAN_ARGS = --quiet
  endif
  
- # Prevent recursive expansions of $(CFLAGS) to avoid repeatedly performing
-@@ -49,20 +47,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC			\
+ # when cross compiling, cargo places the built binary in a different location
+@@ -56,20 +54,6 @@ CFLAGS+=-std=gnu11 -O2 -g -MMD -Wall -fPIC			\
  # recursive expansion here (CFLAGS is not yet completely built by this line)
  LDFLAGS+=$(CFLAGS) $(EXTRA_LDFLAGS)
  
@@ -44,7 +44,7 @@ index 23122fd6..24d18f61 100644
  include Makefile.compiler
  
  CFLAGS+=$(call cc-disable-warning, unused-but-set-variable)
-@@ -173,7 +157,7 @@ BCACHEFS_DEPS=libbcachefs.a
+@@ -181,7 +165,7 @@ BCACHEFS_DEPS=libbcachefs.a
  RUST_SRCS:=$(shell find src bch_bindgen/src -type f -iname '*.rs')
  
  bcachefs: $(BCACHEFS_DEPS) $(RUST_SRCS)
@@ -53,7 +53,7 @@ index 23122fd6..24d18f61 100644
  
  libbcachefs.a: $(OBJS)
  	@echo "    [AR]     $@"
-@@ -219,7 +203,6 @@ install_systemd: $(systemd_services) $(systemd_libexecfiles)
+@@ -227,7 +211,6 @@ install_systemd: $(systemd_services) $(systemd_libexecfiles)
  clean:
  	@echo "Cleaning all"
  	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version *.tar.xz $(OBJS) $(DEPS) $(DOCGENERATED)
@@ -62,5 +62,5 @@ index 23122fd6..24d18f61 100644
  
  .PHONY: deb
 -- 
-2.45.2
+2.49.0
 
