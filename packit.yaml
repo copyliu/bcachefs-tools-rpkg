@@ -1,6 +1,8 @@
 # See the documentation for more information:
 # https://packit.dev/docs/configuration/
 
+upstream_project_url: https://github.com/koverstreet/bcachefs-tools
+upstream_tag_template: v{version}
 copy_upstream_release_description: false
 
 jobs:
