@@ -1,0 +1,456 @@
+From 17f2ba49b7bd3dd34ec317b01be5fb1cd52be3ef Mon Sep 17 00:00:00 2001
+From: Kent Overstreet <kent.overstreet@linux.dev>
+Date: Thu, 15 Jan 2026 03:28:40 -0500
+Subject: [PATCH] Kill include/linux/types.h
+
+Don't shadow the one in /usr/include/linux.
+
+Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+---
+ c_src/cmd_fsck.c               |   3 +
+ include/linux/atomic.h         |   2 +-
+ include/linux/bitops.h         |   2 +
+ include/linux/byteorder.h      |   8 +--
+ include/linux/cleanup.h        |   2 +-
+ include/linux/err.h            |   2 +
+ include/linux/kernel.h         |  70 +++++++++++++++++++++-
+ include/linux/kmsan-checks.h   |   6 +-
+ include/linux/module.h         |   1 +
+ include/linux/overflow.h       |   2 +
+ include/linux/sort.h           |   2 +-
+ include/linux/string_helpers.h |   2 +-
+ include/linux/types.h          | 103 ---------------------------------
+ linux/fs.c                     |   1 +
+ linux/sort.c                   |  10 ++--
+ 15 files changed, 94 insertions(+), 122 deletions(-)
+ delete mode 100644 include/linux/types.h
+
+diff --git a/c_src/cmd_fsck.c b/c_src/cmd_fsck.c
+index 7549a7043..621c9b148 100644
+--- a/c_src/cmd_fsck.c
++++ b/c_src/cmd_fsck.c
+@@ -1,5 +1,8 @@
+ 
++#include <asm/types.h>
++
+ #include <errno.h>
++#include <fcntl.h>
+ #include <getopt.h>
+ #include <sys/uio.h>
+ #include <unistd.h>
+diff --git a/include/linux/atomic.h b/include/linux/atomic.h
+index 62c708793..3603435fa 100644
+--- a/include/linux/atomic.h
++++ b/include/linux/atomic.h
+@@ -2,7 +2,7 @@
+ #define __TOOLS_LINUX_ATOMIC_H
+ 
+ #include <linux/compiler.h>
+-#include <linux/types.h>
++#include <linux/kernel.h>
+ 
+ typedef struct {
+ 	int		counter;
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index 937395329..0d8cf1361 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -1,8 +1,10 @@
+ #ifndef _TOOLS_LINUX_BITOPS_H_
+ #define _TOOLS_LINUX_BITOPS_H_
+ 
++#include <stdbool.h>
+ #include <asm/types.h>
+ #include <linux/compiler.h>
++#include <linux/kernel.h>
+ #include <linux/page.h>
+ 
+ #ifndef __WORDSIZE
+diff --git a/include/linux/byteorder.h b/include/linux/byteorder.h
+index c5ab51e9a..a7e55ef06 100644
+--- a/include/linux/byteorder.h
++++ b/include/linux/byteorder.h
+@@ -1,7 +1,7 @@
+-#ifndef __LINUX_BYTEORDER_H
+-#define __LINUX_BYTEORDER_H
++#ifndef __LINUX_SHIM_BYTEORDER_H
++#define __LINUX_SHIM_BYTEORDER_H
+ 
+-#include <linux/compiler.h>
++#include <linux/kernel.h>
+ #include <asm/byteorder.h>
+ 
+ #define swab16 __swab16
+@@ -80,4 +80,4 @@ static inline void le32_to_cpu_array(u32 *buf, unsigned int words)
+ 	}
+ }
+ 
+-#endif /* __LINUX_BYTEORDER_H */
++#endif /* __LINUX_SHIM_BYTEORDER_H */
+diff --git a/include/linux/cleanup.h b/include/linux/cleanup.h
+index 7e57047e1..e6ec2dede 100644
+--- a/include/linux/cleanup.h
++++ b/include/linux/cleanup.h
+@@ -2,7 +2,7 @@
+ #ifndef _LINUX_CLEANUP_H
+ #define _LINUX_CLEANUP_H
+ 
+-#include <linux/compiler.h>
++#include <linux/kernel.h>
+ 
+ /**
+  * DOC: scope-based cleanup helpers
+diff --git a/include/linux/err.h b/include/linux/err.h
+index e94bdff59..cd81bee18 100644
+--- a/include/linux/err.h
++++ b/include/linux/err.h
+@@ -1,6 +1,8 @@
+ #ifndef __TOOLS_LINUX_ERR_H
+ #define __TOOLS_LINUX_ERR_H
+ 
++#include <stdbool.h>
++
+ #include <linux/compiler.h>
+ #include <linux/types.h>
+ 
+diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+index efa733851..c9e76458d 100644
+--- a/include/linux/kernel.h
++++ b/include/linux/kernel.h
+@@ -3,21 +3,66 @@
+ 
+ #include <assert.h>
+ #include <errno.h>
++#include <fcntl.h>
+ #include <stdarg.h>
++#include <stdbool.h>
+ #include <stddef.h>
++#include <stdint.h>
+ #include <stdio.h>
++#include <sys/stat.h>
+ #include <limits.h>
+ 
+ #include <linux/bug.h>
+-#include <linux/byteorder.h>
++#include <linux/cache.h>
+ #include <linux/cleanup.h>
+ #include <linux/compiler.h>
+ #include <linux/dcache.h>
+ #include <linux/kmsan-checks.h>
+-#include <linux/math.h>
+-#include <linux/minmax.h>
+ #include <linux/static_key.h>
+ 
++#define BITS_PER_LONG	__BITS_PER_LONG
++
++struct page;
++struct kmem_cache;
++
++typedef unsigned long		pgoff_t;
++
++typedef unsigned short		umode_t;
++
++typedef unsigned gfp_t;
++
++#define GFP_ATOMIC	0
++#define GFP_NOFS	0
++#define GFP_NOIO	0
++#define GFP_NOWAIT	0
++#define __GFP_RECLAIM	0
++#define __GFP_FS	0
++#define __GFP_IO	0
++#define __GFP_NOWARN	0
++#define __GFP_NORETRY	0
++#define __GFP_NOFAIL	0
++#define __GFP_ACCOUNT	0
++#define __GFP_RECLAIMABLE 0
++#define __GFP_ZERO	1
++#define GFP_KERNEL	2
++
++#define PAGE_ALLOC_COSTLY_ORDER	6
++
++typedef __u64 u64;
++typedef __s64 s64;
++typedef __u32 u32;
++typedef __s32 s32;
++typedef __u16 u16;
++typedef __s16 s16;
++typedef __u8  u8;
++typedef __s8  s8;
++
++typedef unsigned char		unchar;
++typedef unsigned short		ushort;
++typedef unsigned int		uint;
++typedef unsigned long		ulong;
++typedef unsigned long long	ullong;
++
+ #define BIT(nr)			(1UL << (nr))
+ #define BIT_ULL(nr)		(1ULL << (nr))
+ 
+@@ -263,4 +308,23 @@ struct qstr {
+ #define DECLARE_FLEX_ARRAY(T, member)        T member[0]
+ #endif
+ 
++typedef u64 sector_t;
++
++typedef void (*swap_r_func_t)(void *a, void *b, int size, const void *priv);
++typedef void (*swap_func_t)(void *a, void *b, int size);
++
++typedef int (*cmp_r_func_t)(const void *a, const void *b, const void *priv);
++typedef int (*cmp_func_t)(const void *a, const void *b);
++
++typedef unsigned int __bitwise slab_flags_t;
++typedef u64 phys_addr_t;
++struct vm_struct;
++struct mnt_idmap;
++
++#include <linux/math.h>
++#include <linux/minmax.h>
++#include <linux/byteorder.h>
++
++#define __cold
++
+ #endif
+diff --git a/include/linux/kmsan-checks.h b/include/linux/kmsan-checks.h
+index e1082dc40..16c191b4d 100644
+--- a/include/linux/kmsan-checks.h
++++ b/include/linux/kmsan-checks.h
+@@ -10,7 +10,7 @@
+ #ifndef _LINUX_KMSAN_CHECKS_H
+ #define _LINUX_KMSAN_CHECKS_H
+ 
+-#include <linux/types.h>
++#include <linux/kernel.h>
+ 
+ #ifdef CONFIG_KMSAN
+ 
+@@ -24,7 +24,7 @@
+  * uninitialized. Error reports for this memory will reference the call site of
+  * kmsan_poison_memory() as origin.
+  */
+-void kmsan_poison_memory(const void *address, size_t size, gfp_t flags);
++void kmsan_poison_memory(const void *address, size_t size, unsigned flags);
+ 
+ /**
+  * kmsan_unpoison_memory() -  Mark the memory range as initialized.
+@@ -75,7 +75,7 @@ void kmsan_memmove(void *to, const void *from, size_t to_copy);
+ #else
+ 
+ static inline void kmsan_poison_memory(const void *address, size_t size,
+-				       gfp_t flags)
++				       unsigned flags)
+ {
+ }
+ static inline void kmsan_unpoison_memory(const void *address, size_t size)
+diff --git a/include/linux/module.h b/include/linux/module.h
+index 1dce3f7c4..354eb75ac 100644
+--- a/include/linux/module.h
++++ b/include/linux/module.h
+@@ -1,6 +1,7 @@
+ #ifndef _LINUX_MODULE_H
+ #define _LINUX_MODULE_H
+ 
++#include <linux/kernel.h>
+ #include <linux/stat.h>
+ #include <linux/compiler.h>
+ #include <linux/export.h>
+diff --git a/include/linux/overflow.h b/include/linux/overflow.h
+index 0c7e3dcfe..e2d3be4e4 100644
+--- a/include/linux/overflow.h
++++ b/include/linux/overflow.h
+@@ -2,6 +2,8 @@
+ #ifndef __LINUX_OVERFLOW_H
+ #define __LINUX_OVERFLOW_H
+ 
++#include <stdbool.h>
++#include <stdint.h>
+ #include <linux/compiler.h>
+ #include <linux/limits.h>
+ #include <linux/const.h>
+diff --git a/include/linux/sort.h b/include/linux/sort.h
+index 4f45c7dc0..e6b191f38 100644
+--- a/include/linux/sort.h
++++ b/include/linux/sort.h
+@@ -2,7 +2,7 @@
+ #define _LINUX_SORT_H
+ 
+ #include <stdlib.h>
+-#include <linux/types.h>
++#include <linux/kernel.h>
+ 
+ /**
+  * cmp_int - perform a three-way comparison of the arguments
+diff --git a/include/linux/string_helpers.h b/include/linux/string_helpers.h
+index d4b2f4d3b..8f25e891f 100644
+--- a/include/linux/string_helpers.h
++++ b/include/linux/string_helpers.h
+@@ -3,8 +3,8 @@
+ #define _LINUX_STRING_HELPERS_H_
+ 
+ #include <linux/ctype.h>
++#include <linux/kernel.h>
+ #include <linux/string.h>
+-#include <linux/types.h>
+ 
+ 
+ /* Descriptions of the types of units to
+diff --git a/include/linux/types.h b/include/linux/types.h
+deleted file mode 100644
+index 44cdff5bf..000000000
+--- a/include/linux/types.h
++++ /dev/null
+@@ -1,103 +0,0 @@
+-#ifndef _TOOLS_LINUX_TYPES_H_
+-#define _TOOLS_LINUX_TYPES_H_
+-
+-#include <stdbool.h>
+-#include <stddef.h>
+-#include <stdint.h>
+-
+-#include <fcntl.h>
+-#include <sys/stat.h>
+-#include <sys/types.h>
+-#include <linux/posix_types.h>
+-
+-#ifndef __SANE_USERSPACE_TYPES__
+-#define __SANE_USERSPACE_TYPES__	/* For PPC64, to get LL64 types */
+-#endif
+-#include <asm/types.h>
+-
+-#include <linux/cache.h>
+-
+-#define BITS_PER_LONG	__BITS_PER_LONG
+-
+-struct page;
+-struct kmem_cache;
+-
+-typedef unsigned long		pgoff_t;
+-
+-typedef unsigned short		umode_t;
+-
+-typedef unsigned gfp_t;
+-
+-#define GFP_ATOMIC	0
+-#define GFP_NOFS	0
+-#define GFP_NOIO	0
+-#define GFP_NOWAIT	0
+-#define __GFP_RECLAIM	0
+-#define __GFP_FS	0
+-#define __GFP_IO	0
+-#define __GFP_NOWARN	0
+-#define __GFP_NORETRY	0
+-#define __GFP_NOFAIL	0
+-#define __GFP_ACCOUNT	0
+-#define __GFP_RECLAIMABLE 0
+-#define __GFP_ZERO	1
+-#define GFP_KERNEL	2
+-
+-#define PAGE_ALLOC_COSTLY_ORDER	6
+-
+-typedef __u64 u64;
+-typedef __s64 s64;
+-typedef __u32 u32;
+-typedef __s32 s32;
+-typedef __u16 u16;
+-typedef __s16 s16;
+-typedef __u8  u8;
+-typedef __s8  s8;
+-
+-typedef unsigned char		unchar;
+-typedef unsigned short		ushort;
+-typedef unsigned int		uint;
+-typedef unsigned long		ulong;
+-typedef unsigned long long	ullong;
+-
+-#ifdef __CHECKER__
+-#define __bitwise__ __attribute__((bitwise))
+-#else
+-#define __bitwise__
+-#endif
+-#ifdef __CHECK_ENDIAN__
+-#define __bitwise __bitwise__
+-#else
+-#define __bitwise
+-#endif
+-
+-#define __force
+-#define __user
+-#define __must_check
+-#define __cold
+-
+-typedef __u16 __bitwise __le16;
+-typedef __u16 __bitwise __be16;
+-typedef __u32 __bitwise __le32;
+-typedef __u32 __bitwise __be32;
+-typedef __u64 __bitwise __le64;
+-typedef __u64 __bitwise __be64;
+-
+-#ifndef __aligned_u64
+-# define __aligned_u64 __u64 __attribute__((aligned(8)))
+-#endif
+-
+-typedef u64 sector_t;
+-
+-typedef void (*swap_r_func_t)(void *a, void *b, int size, const void *priv);
+-typedef void (*swap_func_t)(void *a, void *b, int size);
+-
+-typedef int (*cmp_r_func_t)(const void *a, const void *b, const void *priv);
+-typedef int (*cmp_func_t)(const void *a, const void *b);
+-
+-typedef unsigned int __bitwise slab_flags_t;
+-typedef u64 phys_addr_t;
+-struct vm_struct;
+-struct mnt_idmap;
+-
+-#endif /* _TOOLS_LINUX_TYPES_H_ */
+diff --git a/linux/fs.c b/linux/fs.c
+index 623ca266c..e0279031b 100644
+--- a/linux/fs.c
++++ b/linux/fs.c
+@@ -1,3 +1,4 @@
++#include <linux/kernel.h>
+ #include <linux/fs.h>
+ #include <linux/posix_acl.h>
+ #include <linux/posix_acl_xattr.h>
+diff --git a/linux/sort.c b/linux/sort.c
+index b01a9d911..f723ffd24 100644
+--- a/linux/sort.c
++++ b/linux/sort.c
+@@ -129,8 +129,8 @@ static void swap_bytes(void *a, void *b, size_t n)
+ #define SWAP_WRAPPER  (swap_r_func_t)3
+ 
+ struct wrapper {
+-	cmp_func_t cmp;
+-	swap_func_t swap;
++	cmp_func_t	cmp_fn;
++	swap_func_t	swap_fn;
+ };
+ 
+ /*
+@@ -140,7 +140,7 @@ struct wrapper {
+ static void do_swap(void *a, void *b, size_t size, swap_r_func_t swap_func, const void *priv)
+ {
+ 	if (swap_func == SWAP_WRAPPER) {
+-		((const struct wrapper *)priv)->swap(a, b, (int)size);
++		((const struct wrapper *)priv)->swap_fn(a, b, (int)size);
+ 		return;
+ 	}
+ 
+@@ -159,7 +159,7 @@ static void do_swap(void *a, void *b, size_t size, swap_r_func_t swap_func, cons
+ static int do_cmp(const void *a, const void *b, cmp_r_func_t cmp, const void *priv)
+ {
+ 	if (cmp == _CMP_WRAPPER)
+-		return ((const struct wrapper *)priv)->cmp(a, b);
++		return ((const struct wrapper *)priv)->cmp_fn(a, b);
+ 	return cmp(a, b, priv);
+ }
+ 
+@@ -221,7 +221,7 @@ void sort_r(void *base, size_t num, size_t size,
+ 		return;
+ 
+ 	/* called from 'sort' without swap function, let's pick the default */
+-	if (swap_func == SWAP_WRAPPER && !((struct wrapper *)priv)->swap)
++	if (swap_func == SWAP_WRAPPER && !((struct wrapper *)priv)->swap_fn)
+ 		swap_func = NULL;
+ 
+ 	if (!swap_func) {
