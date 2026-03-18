@@ -1,0 +1,59 @@
+From a7d9bb0c5e682772e911d1db44ca7cf4a4305aea Mon Sep 17 00:00:00 2001
+From: Kent Overstreet <kent.overstreet@linux.dev>
+Date: Tue, 17 Mar 2026 23:32:46 -0400
+Subject: [PATCH 14/14] Fix build with -O0: strtomem_pad BUILD_BUG_ON and
+ missing param_set_bool
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+strtomem_pad's BUILD_BUG_ON checks __builtin_constant_p(ARRAY_SIZE()),
+which returns false at -O0 since the compiler doesn't constant-fold
+without optimization. Remove the check — ARRAY_SIZE already fails at
+compile time if dest isn't an array.
+
+param_set_bool was declared extern but never defined. At -O2 the call
+in bch2_param_set_static_key_t is eliminated as dead code; at -O0 the
+linker needs it. Provide an inline implementation using kstrtobool.
+
+Closes: https://github.com/koverstreet/bcachefs-tools/issues/538
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ include/linux/module.h | 7 ++++++-
+ include/linux/string.h | 2 --
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/module.h b/include/linux/module.h
+index 354eb75a..3bea8f5d 100644
+--- a/include/linux/module.h
++++ b/include/linux/module.h
+@@ -80,6 +80,11 @@ struct kernel_param {
+ 	};
+ };
+ 
+-extern int param_set_bool(const char *val, const struct kernel_param *kp);
++int kstrtobool(const char *, bool *);
++
++static inline int param_set_bool(const char *val, const struct kernel_param *kp)
++{
++	return kstrtobool(val, kp->arg);
++}
+ 
+ #endif /* _LINUX_MODULE_H */
+diff --git a/include/linux/string.h b/include/linux/string.h
+index 3a7610bb..9739a1cb 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -20,8 +20,6 @@ extern void * memscan(void *,int, size_t);
+ 	const size_t _dest_len = ARRAY_SIZE(dest);			\
+ 	const size_t _src_len = __builtin_object_size(src, 1);		\
+ 									\
+-	BUILD_BUG_ON(!__builtin_constant_p(_dest_len) ||		\
+-		     _dest_len == (size_t)-1);				\
+ 	memcpy_and_pad(dest, _dest_len, src,				\
+ 		       strnlen(src, min(_src_len, _dest_len)), pad);	\
+ } while (0)
+-- 
+2.53.0
+

@@ -1,0 +1,110 @@
+From a7aa4d24be0e1af52da36de10863e6bbcce45cc4 Mon Sep 17 00:00:00 2001
+From: Kent Overstreet <kent.overstreet@linux.dev>
+Date: Tue, 17 Mar 2026 14:58:02 -0400
+Subject: [PATCH 08/14] Fix 32-bit portability: use proper libc types instead
+ of i64/u64
+
+On i686, libc::off_t is i32 (not i64), timespec fields are i32, and
+libc::ino_t is u32 (not u64). Use libc::off_t for ftruncate/pwrite
+offsets, inferred casts for timespec fields, and explicit u64 casts
+for ino_t comparisons against bcachefs inode numbers.
+
+Co-Authored-By: ProofOfConcept <poc@bcachefs.org>
+---
+ src/commands/fusemount.rs       | 4 ++--
+ src/commands/image.rs           | 4 ++--
+ src/commands/kill_btree_node.rs | 2 +-
+ src/copy_fs.rs                  | 6 +++---
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/commands/fusemount.rs b/src/commands/fusemount.rs
+index fade1200..1bfba938 100644
+--- a/src/commands/fusemount.rs
++++ b/src/commands/fusemount.rs
+@@ -276,7 +276,7 @@ impl Filesystem for BcachefsFs {
+             Some(TimeOrNow::Now) => (2, 0),
+             Some(TimeOrNow::SpecificTime(t)) => {
+                 let d = t.duration_since(UNIX_EPOCH).unwrap_or_default();
+-                let ts = c::timespec { tv_sec: d.as_secs() as i64, tv_nsec: d.subsec_nanos() as i64 };
++                let ts = c::timespec { tv_sec: d.as_secs() as _, tv_nsec: d.subsec_nanos() as _ };
+                 (1, fs.timespec_to_time(ts))
+             }
+         };
+@@ -285,7 +285,7 @@ impl Filesystem for BcachefsFs {
+             Some(TimeOrNow::Now) => (2, 0),
+             Some(TimeOrNow::SpecificTime(t)) => {
+                 let d = t.duration_since(UNIX_EPOCH).unwrap_or_default();
+-                let ts = c::timespec { tv_sec: d.as_secs() as i64, tv_nsec: d.subsec_nanos() as i64 };
++                let ts = c::timespec { tv_sec: d.as_secs() as _, tv_nsec: d.subsec_nanos() as _ };
+                 (1, fs.timespec_to_time(ts))
+             }
+         };
+diff --git a/src/commands/image.rs b/src/commands/image.rs
+index d5ea9b24..c6fa8122 100644
+--- a/src/commands/image.rs
++++ b/src/commands/image.rs
+@@ -493,7 +493,7 @@ fn image_create_inner(
+             let path = unsafe { CStr::from_ptr(dev.path) }.to_string_lossy();
+             bail!("Error opening {}: {}", path, std::io::Error::from_raw_os_error(-ret));
+         }
+-        if unsafe { libc::ftruncate((*dev.bdev).bd_fd, target_size as i64) } != 0 {
++        if unsafe { libc::ftruncate((*dev.bdev).bd_fd, target_size as libc::off_t) } != 0 {
+             bail!("ftruncate error: {}", std::io::Error::last_os_error());
+         }
+     }
+@@ -653,7 +653,7 @@ fn image_update_inner(
+         ),
+     );
+ 
+-    if unsafe { libc::ftruncate((*dev_opts.bdev).bd_fd, metadata_dev_size as i64) } != 0 {
++    if unsafe { libc::ftruncate((*dev_opts.bdev).bd_fd, metadata_dev_size as libc::off_t) } != 0 {
+         bail!("ftruncate error: {}", std::io::Error::last_os_error());
+     }
+ 
+diff --git a/src/commands/kill_btree_node.rs b/src/commands/kill_btree_node.rs
+index 6397dbaa..b7e546c0 100644
+--- a/src/commands/kill_btree_node.rs
++++ b/src/commands/kill_btree_node.rs
+@@ -143,7 +143,7 @@ pub fn cmd_kill_btree_node(argv: Vec<String>) -> Result<()> {
+                     dev, kill.btree, kill.level, k.to_text(&fs));
+ 
+                 let fd = unsafe { (*ca.disk_sb.bdev).bd_fd };
+-                let offset = (ptr.offset() as i64) << 9;
++                let offset = (ptr.offset() as libc::off_t) << 9;
+                 let ret = unsafe {
+                     libc::pwrite(fd, zeroes, block_size, offset)
+                 };
+diff --git a/src/copy_fs.rs b/src/copy_fs.rs
+index 280f0290..36ac8c0d 100644
+--- a/src/copy_fs.rs
++++ b/src/copy_fs.rs
+@@ -946,7 +946,7 @@ fn copy_dir(
+             continue;
+         }
+ 
+-        if s.migrate_type == MigrateType::Migrate && d.stat.st_ino == s.bcachefs_inum {
++        if s.migrate_type == MigrateType::Migrate && d.stat.st_ino as u64 == s.bcachefs_inum {
+             continue;
+         }
+ 
+@@ -965,7 +965,7 @@ fn copy_dir(
+ 
+         // Hardlink handling
+         if (d.stat.st_mode & libc::S_IFMT) == libc::S_IFREG && d.stat.st_nlink > 1 {
+-            let src_ino = d.stat.st_ino;
++            let src_ino = d.stat.st_ino as u64;
+             if let Some(&dst_ino) = s.hardlinks.get(&src_ino) {
+                 create_or_update_link(
+                     fs, dir_inum, dst, &d.name,
+@@ -985,7 +985,7 @@ fn copy_dir(
+ 
+         // Record hardlink destination
+         if (d.stat.st_mode & libc::S_IFMT) == libc::S_IFREG && d.stat.st_nlink > 1 {
+-            s.hardlinks.insert(d.stat.st_ino, inode.bi_inum);
++            s.hardlinks.insert(d.stat.st_ino as u64, inode.bi_inum);
+         }
+ 
+         let name_cstr = &d.name;
+-- 
+2.53.0
+

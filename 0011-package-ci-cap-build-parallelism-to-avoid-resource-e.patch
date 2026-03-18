@@ -1,0 +1,37 @@
+From 1ddc43d4ed57c2740904ced78ad23939363f8dc6 Mon Sep 17 00:00:00 2001
+From: Kent Overstreet <kent.overstreet@linux.dev>
+Date: Tue, 17 Mar 2026 23:09:07 -0400
+Subject: [PATCH 11/14] package-ci: cap build parallelism to avoid resource
+ exhaustion
+
+nproc can report 80+ on big machines (farm1), which intermittently
+exhausts thread/fd limits in containers during Rust compilation.
+Default to 16 parallel jobs, overridable via MAX_PARALLEL env var.
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ package-ci/scripts/build-binary.sh | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/package-ci/scripts/build-binary.sh b/package-ci/scripts/build-binary.sh
+index 0a511fe4..73caadc3 100755
+--- a/package-ci/scripts/build-binary.sh
++++ b/package-ci/scripts/build-binary.sh
+@@ -224,10 +224,12 @@ if [ "$ARCH" = "ppc64el" ]; then
+     run 'printf "\n[target.powerpc64le-unknown-linux-gnu]\nlinker = \"powerpc64le-linux-gnu-gcc\"\n" >> /build/src/.cargo/config.toml'
+ fi
+ 
+-# Build
++# Cap parallelism — nproc can report 80+ on big machines, which
++# intermittently exhausts thread/fd limits in containers
++MAX_PARALLEL="${MAX_PARALLEL:-16}"
+ run "
+     cd /build/src
+-    dpkg-buildpackage -us -uc -b ${CROSS_DPKG_ARCH}
++    DEB_BUILD_OPTIONS=\"parallel=$MAX_PARALLEL\" dpkg-buildpackage -us -uc -b ${CROSS_DPKG_ARCH}
+ "
+ 
+ # Copy results
+-- 
+2.53.0
+

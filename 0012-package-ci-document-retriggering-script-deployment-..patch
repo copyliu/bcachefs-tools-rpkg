@@ -1,0 +1,83 @@
+From f1edbace9e22eb122eda22d31bb440523efb7a4a Mon Sep 17 00:00:00 2001
+From: Kent Overstreet <kent.overstreet@linux.dev>
+Date: Tue, 17 Mar 2026 23:09:15 -0400
+Subject: [PATCH 12/14] package-ci: document retriggering, script deployment,
+ .cargo/config.toml
+
+Add sections covering:
+- How to retrigger builds for specific commits
+- Deploying script changes (scripts run from deployed location)
+- .cargo/config.toml and vendored sources (why it must not be in git)
+- Common failure modes
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+---
+ package-ci/doc/architecture.md | 52 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+diff --git a/package-ci/doc/architecture.md b/package-ci/doc/architecture.md
+index aca1c9f4..ccc3d89d 100644
+--- a/package-ci/doc/architecture.md
++++ b/package-ci/doc/architecture.md
+@@ -144,6 +144,58 @@ kill -USR1 $(cat /home/aptbcachefsorg/package-ci/orchestrator.pid)
+ # https://apt.bcachefs.org/ci.html
+ ```
+ 
++## Retriggering builds
++
++To rerun a specific commit (e.g. to test whether a regression is from
++a particular change):
++
++```bash
++# Option 1: force retry of a previous commit
++# Write the commit hash into the desired file, then wake the orchestrator
++echo "$COMMIT" > /home/aptbcachefsorg/package-ci/desired
++kill -USR1 $(cat /home/aptbcachefsorg/package-ci/orchestrator.pid)
++
++# Option 2: clear failed status for specific jobs on the current commit
++# The orchestrator will re-attempt them on the next reconcile
++rm /home/aptbcachefsorg/package-ci/builds/$COMMIT/$DISTRO-$ARCH/status
++rm /home/aptbcachefsorg/package-ci/builds/$COMMIT/source/status  # if source failed
++kill -USR1 $(cat /home/aptbcachefsorg/package-ci/orchestrator.pid)
++
++# Option 3: nuke an entire commit's build state to start fresh
++rm -rf /home/aptbcachefsorg/package-ci/builds/$COMMIT
++kill -USR1 $(cat /home/aptbcachefsorg/package-ci/orchestrator.pid)
++```
++
++Note: the orchestrator only builds the commit in the `desired` file.
++To test an older commit, you must update `desired`. Remember to set it
++back afterwards.
++
++## Deploying script changes
++
++**Scripts run from the deployed location**, not from the repo being
++built. Changes to `package-ci/scripts/*.sh` must be explicitly deployed:
++
++```bash
++scp scripts/*.sh aptbcachefsorg@apt.bcachefs.org:~/package-ci/scripts/
++```
++
++The orchestrator binary itself also needs explicit deployment (see
++Deployment section above). The orchestrator does NOT need a restart
++after deploying script changes — scripts are exec'd fresh each build.
++
++## .cargo/config.toml and vendored sources
++
++The repo's `.cargo/config.toml` (gitignored) contains vendored source
++config that only works when `vendor/` exists (tagged release tarballs).
++**Do not add `.cargo/config.toml` to git** — it will break non-vendor
++builds because cargo will try to use a vendor directory that doesn't
++exist.
++
++Cross-linker config for ppc64el/arm64 is handled by `build-binary.sh`,
++which creates `.cargo/config.toml` with the appropriate
++`[target.*.linker]` settings if it doesn't already exist. This runs
++after source extraction and before `dpkg-buildpackage`.
++
+ ## Common failure modes
+ 
+ **Publish not running**: Publish requires `!still_running` — all
+-- 
+2.53.0
+
