@@ -15,7 +15,7 @@
 %global make_opts VERSION="%{version}" %{?with_fuse:BCACHEFS_FUSE=1} BUILD_VERBOSE=1 PREFIX=%{_prefix} ROOT_SBINDIR=%{_sbindir}
 
 Name:           bcachefs-tools
-Version:        1.38.2
+Version:        1.38.3
 Release:        1%{?dist}
 Summary:        Userspace tools for bcachefs
 
@@ -58,6 +58,7 @@ BuildRequires:  pkgconfig(libkeyutils)
 BuildRequires:  pkgconfig(liblz4)
 BuildRequires:  pkgconfig(libsodium)
 BuildRequires:  pkgconfig(libudev)
+BuildRequires:  pkgconfig(libunwind)
 BuildRequires:  pkgconfig(liburcu)
 BuildRequires:  pkgconfig(libzstd)
 BuildRequires:  pkgconfig(systemd)
@@ -217,6 +218,10 @@ rm -rf %{buildroot}%{_usrsrc}
 
 
 %changelog
+* Sun May 10 2026 Neal Gompa <ngompa@fedoraproject.org> - 1.38.3-1
+- Update to version 1.38.3
+- Resolves: rhbz#2468640
+
 * Sun May 10 2026 Neal Gompa <ngompa@fedoraproject.org> - 1.38.2-1
 - Update to version 1.38.2
 - Resolves: rhbz#2464701
