@@ -1,19 +1,7 @@
-From 188ba076df904535f598ffecd5e3c4bf4e0b3ea1 Mon Sep 17 00:00:00 2001
-From: Neal Gompa <ngompa@fedoraproject.org>
-Date: Thu, 18 Sep 2025 05:51:45 -0400
-Subject: [PATCH] Makefile: Do not run Rust builds
-
-We are going to run it separately.
----
- Makefile | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index 29366b46b..b17613674 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -237,7 +237,7 @@ BCACHEFS_DEPS=libbcachefs.a
- RUST_SRCS:=$(shell find src bch_bindgen/src -type f -iname '*.rs')
+@@ -266,7 +266,7 @@ BCACHEFS_DEPS=libbcachefs.a
+ RUST_SRCS:=$(shell find src fs bch_bindgen/src -type f ! -path 'fs/vendor/kernel-rust/*' -iname '*.rs')
  
  bcachefs: $(BCACHEFS_DEPS) $(RUST_SRCS)
 -	$(Q)$(CARGO_BUILD)
@@ -21,14 +9,11 @@ index 29366b46b..b17613674 100644
  
  libbcachefs.a: $(OBJS)
  	@echo "    [AR]     $@"
-@@ -373,7 +373,6 @@ dkms-reload:
- clean:
+@@ -445,7 +445,6 @@ clean:
  	@echo "Cleaning all"
- 	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version dkms/dkms.conf build.vars *.tar.xz $(OBJS) $(DEPS) $(DOCGENERATED)
+ 	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version dkms/dkms.conf build.vars *.tar.xz $(DOCGENERATED)
+ 	$(Q)$(RM) -r build
 -	$(Q)$(CARGO_CLEAN)
  	$(Q)$(RM) -f $(built_scripts)
  
  .PHONY: deb
--- 
-2.53.0
-

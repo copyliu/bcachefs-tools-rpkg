@@ -15,7 +15,7 @@
 %global make_opts VERSION="%{version}" %{?with_fuse:BCACHEFS_FUSE=1} BUILD_VERBOSE=1 PREFIX=%{_prefix} ROOT_SBINDIR=%{_sbindir}
 
 Name:           bcachefs-tools
-Version:        1.38.6
+Version:        1.38.8
 Release:        1%{?dist}
 Summary:        Userspace tools for bcachefs
 
@@ -218,6 +218,9 @@ rm -rf %{buildroot}%{_usrsrc}
 
 
 %changelog
+* Thu Jun 18 2026 CopyLiu <copyliu@gmail.com> - 1.38.8
+- Update to version 1.38.8
+
 * Thu Jun 18 2026 Neal Gompa <ngompa@fedoraproject.org> - 1.38.6-1
 - Update to version 1.38.6
 - Resolves: rhbz#2468640
