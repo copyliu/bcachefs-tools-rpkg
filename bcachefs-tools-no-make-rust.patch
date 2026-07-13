@@ -1,3 +1,14 @@
+From ee2db7ab01cbbba64727c1785ab42f9add6a797b Mon Sep 17 00:00:00 2001
+From: Copy Liu <copyliu@gmail.com>
+Date: Mon, 13 Jul 2026 17:19:15 +0800
+Subject: [PATCH] Makefile: Do not run Rust builds
+
+---
+ Makefile | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 9593b9eb0..d4230e028 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -266,7 +266,7 @@ BCACHEFS_DEPS=libbcachefs.a
@@ -9,7 +20,7 @@
  
  libbcachefs.a: $(OBJS)
  	@echo "    [AR]     $@"
-@@ -445,7 +445,6 @@ clean:
+@@ -450,7 +450,6 @@ clean:
  	@echo "Cleaning all"
  	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version dkms/dkms.conf build.vars *.tar.xz $(DOCGENERATED)
  	$(Q)$(RM) -r build
@@ -17,3 +28,6 @@
  	$(Q)$(RM) -f $(built_scripts)
  
  .PHONY: deb
+-- 
+2.55.0
+
