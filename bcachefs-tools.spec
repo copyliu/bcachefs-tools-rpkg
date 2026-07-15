@@ -70,6 +70,7 @@ BuildRequires:  systemd-rpm-macros
 BuildRequires:  cargo-rpm-macros >= 25
 BuildRequires:  cargo
 BuildRequires:  rust
+BuildRequires:  bindgen-cli
 %if %{with rust_vendorized}
 BuildRequires:  clang-devel
 BuildRequires:  llvm-devel
