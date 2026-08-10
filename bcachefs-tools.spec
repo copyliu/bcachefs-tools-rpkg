@@ -15,7 +15,7 @@
 %global make_opts VERSION="%{version}" %{?with_fuse:BCACHEFS_FUSE=1} BUILD_VERBOSE=1 PREFIX=%{_prefix} ROOT_SBINDIR=%{_sbindir}
 
 Name:           bcachefs-tools
-Version:        1.39.0
+Version:        1.39.1
 Release:        1%{?dist}
 Summary:        Userspace tools for bcachefs
 
@@ -219,6 +219,9 @@ rm -rf %{buildroot}%{_usrsrc}
 
 
 %changelog
+* Mon Aug 10 2026 CopyLiu <copyliu@gmail.com> - 1.39.0
+- Update to version 1.39.1
+
 * Thu Aug 04 2026 CopyLiu <copyliu@gmail.com> - 1.39.0
 - Update to version 1.39.0
 
