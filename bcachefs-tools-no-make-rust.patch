@@ -1,6 +1,6 @@
-From ee2db7ab01cbbba64727c1785ab42f9add6a797b Mon Sep 17 00:00:00 2001
-From: Copy Liu <copyliu@gmail.com>
-Date: Mon, 13 Jul 2026 17:19:15 +0800
+From 1ff643143d6724964ffc1a6f762e4ffd64566ed4 Mon Sep 17 00:00:00 2001
+From: copyliu <copyliu@gmail.com>
+Date: Mon, 10 Aug 2026 09:42:29 +0800
 Subject: [PATCH] Makefile: Do not run Rust builds
 
 ---
@@ -8,11 +8,11 @@ Subject: [PATCH] Makefile: Do not run Rust builds
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 9593b9eb0..d4230e028 100644
+index 8b11903e8..fd42bfcce 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -266,7 +266,7 @@ BCACHEFS_DEPS=libbcachefs.a
- RUST_SRCS:=$(shell find src fs bch_bindgen/src -type f ! -path 'fs/vendor/kernel-rust/*' -iname '*.rs')
+@@ -271,7 +271,7 @@ BCACHEFS_DEPS=libbcachefs.a
+ RUST_SRCS:=$(shell find src fs bch_bindgen bcachefs-shim -type f ! -path 'fs/vendor/kernel-rust/*' -iname '*.rs') build.rs
  
  bcachefs: $(BCACHEFS_DEPS) $(RUST_SRCS)
 -	$(Q)$(CARGO_BUILD)
@@ -20,7 +20,7 @@ index 9593b9eb0..d4230e028 100644
  
  libbcachefs.a: $(OBJS)
  	@echo "    [AR]     $@"
-@@ -450,7 +450,6 @@ clean:
+@@ -458,7 +458,6 @@ clean:
  	@echo "Cleaning all"
  	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version dkms/dkms.conf build.vars *.tar.xz $(DOCGENERATED)
  	$(Q)$(RM) -r build
@@ -29,5 +29,5 @@ index 9593b9eb0..d4230e028 100644
  
  .PHONY: deb
 -- 
-2.55.0
+2.47.3
 
