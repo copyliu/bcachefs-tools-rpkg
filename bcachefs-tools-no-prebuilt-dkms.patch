@@ -1,0 +1,61 @@
+From 1829d9d679845db73f039390a403baf257591572 Mon Sep 17 00:00:00 2001
+From: Neal Gompa <ngompa@fedoraproject.org>
+Date: Sun, 30 Aug 2026 09:40:39 -0400
+Subject: [PATCH] dkms: Always build the kernel module locally
+
+Upstream introduced a funky setup where it will attempt to detect
+the kernel build and download a matching ko file from bcachefs.org
+instead of doing a real build, and then pass the built artifact into
+DKMS to get incorporated into the kernel image properly.
+
+This is unsafe and a vector for hijacks, so remove the mechanism.
+---
+ Makefile    |  1 -
+ fs/Makefile | 19 -------------------
+ 2 files changed, 20 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index af0130d63..22632eeae 100644
+--- a/Makefile
++++ b/Makefile
+@@ -410,7 +410,6 @@ install_dkms: dkms/dkms.conf dkms/module-version.c
+ 	cp -a fs/vendor/kernel-rust $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs/vendor/
+ 	$(INSTALL) -m0755 -D fs/scripts/getdents-layout.sh -t $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs/scripts
+ 	$(INSTALL) -m0755 -D fs/scripts/rust-is-available-dkms.sh -t $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs/scripts
+-	$(INSTALL) -m0755 -D fs/scripts/fetch-module.sh -t $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs/scripts
+ 	$(INSTALL) -m0644 -D signing/bcachefs-signing-ca.pem -t $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs/scripts
+ 	$(INSTALL) -m0644 -D dkms/module-version.c	-t $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs
+ 	$(INSTALL) -m0644 -D version.h			-t $(DESTDIR)$(DKMSDIR)/src/fs/bcachefs
+diff --git a/fs/Makefile b/fs/Makefile
+index 273524bf0..794f286b1 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -2,25 +2,6 @@
+ ifdef BCACHEFS_DKMS
+ CONFIG_BCACHEFS_FS := m
+ # Enable other features here?
+-
+-# Prebuilt-module fast path: before compiling, try to download a signed
+-# bcachefs.ko already built for this exact kernel + bcachefs version. On a hit,
+-# fetch-module.sh drops it where kbuild would emit the module and we build
+-# nothing (empty CONFIG_BCACHEFS_FS) — DKMS then collects the fetched .ko as if
+-# it had been compiled. Any miss (offline, no matching build, wrong vermagic, a
+-# -dirty source tree the farm never builds) falls through to a normal local
+-# compile. fetch-module.sh logs only to stderr, so stdout is empty unless a
+-# module was placed, making the `hit` test unambiguous.
+-bcachefs-version := $(shell sed -n 's/.*bcachefs_version "\(.*\)".*/\1/p' $(src)/version.h 2>/dev/null)
+-ifneq ($(bcachefs-version),)
+-ifeq ($(shell $(CONFIG_SHELL) $(src)/scripts/fetch-module.sh '$(KERNELRELEASE)' '$(bcachefs-version)' '$(obj)/bcachefs.ko' && echo hit),hit)
+-CONFIG_BCACHEFS_FS :=
+-endif
+-else
+-# No version means no lookup key — say so rather than silently compiling:
+-# the missing file is the tell that this tree wasn't staged the supported way.
+-$(warning bcachefs: no version in $(src)/version.h - not looking for a prebuilt module (version.h is staged by bcachefs-tools 'make install_dkms'; a hand-copied kernel fs/bcachefs/ tree lacks it))
+-endif
+ endif
+ 
+ # DKMS / external module builds: bcachefs isn't in the host kernel's .config,
+-- 
+2.55.0
+
