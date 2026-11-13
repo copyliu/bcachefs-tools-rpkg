@@ -1,27 +1,26 @@
-From 1269f7e973a717fca9a493554eb3bf0f0d65bdb2 Mon Sep 17 00:00:00 2001
-From: Neal Gompa <ngompa@fedoraproject.org>
-Date: Thu, 18 Sep 2025 05:51:45 -0400
-Subject: [PATCH] Makefile: Do not run Rust builds
+From f6f0bf58902676a6f8bcd6257b5f4e7a22cb4e1f Mon Sep 17 00:00:00 2001
+From: Copy Liu <copyliu@gmail.com>
+Date: Fri, 13 Nov 2026 18:12:45 +0800
+Subject: [PATCH] [PATCH] Makefile: Do not run Rust builds
 
-We are going to run it separately.
 ---
  Makefile | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 001043d6a..af0130d63 100644
+index 9ab962440..353af6ee6 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -285,7 +285,7 @@ BCACHEFS_DEPS=libbcachefs.a
+@@ -296,7 +296,7 @@ BCACHEFS_DEPS=libbcachefs.a
  RUST_SRCS:=$(shell find src fs bch_bindgen bcachefs-shim -type f ! -path 'fs/vendor/kernel-rust/*' -iname '*.rs') build.rs
  
  bcachefs: $(BCACHEFS_DEPS) $(RUST_SRCS)
 -	$(Q)$(CARGO_BUILD)
 +	@echo "    [RUST]   Skipped"
  
- libbcachefs.a: $(OBJS)
- 	@echo "    [AR]     $@"
-@@ -489,7 +489,6 @@ clean:
+ # The tests that exercise the bindgen-generated bindings. Same two steps the
+ # nix flake check runs (crane-build.nix, checkPhaseCargoCommand) - having them
+@@ -527,7 +527,6 @@ clean:
  	@echo "Cleaning all"
  	$(Q)$(RM) libbcachefs.a c_src/libbcachefs.a .version dkms/dkms.conf build.vars *.tar.xz $(DOCGENERATED)
  	$(Q)$(RM) -r build
@@ -30,5 +29,5 @@ index 001043d6a..af0130d63 100644
  
  .PHONY: deb
 -- 
-2.55.0
+2.56.0
 
